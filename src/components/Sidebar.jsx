@@ -1,64 +1,97 @@
 import React, { useContext } from "react";
 import { FaShoppingCart } from "react-icons/fa";
 import { IoMdClose } from "react-icons/io";
-import { FetchContext } from "./context/ProductProvider";
 import { CounterContext } from "./context/CountProvider";
 import { FaMinus, FaPlus } from "react-icons/fa";
+import { CartContext } from "./context/CartProvider";
 
 const Sidebar = ({ open, setOpen }) => {
-  const { data } = useContext(FetchContext);
+  // Cart get
+  const { cart, removeFromCart } = useContext(CartContext);
 
-  const { count, setCount } = useContext(CounterContext);
+  // Count get (per-product count)
+  const { counts, increaseCount, decreaseCount } = useContext(CounterContext);
 
-  //   specific data store
-
-  const productFilter = data.find((item) => item.id === 1);
+  // Total calculation (based on quantity * price)
+  const totalPrice = cart.reduce(
+    (total, item) => total + item.price * (counts[item.id] || 1),
+    0
+  );
 
   return (
     <>
       {open && (
-        <div className="bg-red-500 text-white w-1/4 fixed top-0 right-0 h-dvh px-5 py-5 overflow-y-scroll">
-          <div className="flex justify-between items-center gap-0 border-b-1 border-b-white pb-4">
-            <div className="">
-              <h1 className="flex justify-start items-center gap-2">
+        <div>
+          <div className="bg-red-500 text-white w-1/4 fixed top-0 right-0 h-dvh px-5 py-5 overflow-y-scroll">
+            {/* Header */}
+            <div className="flex justify-between items-center border-b border-b-white pb-4">
+              <h1 className="flex items-center gap-2">
                 <FaShoppingCart /> Cart
               </h1>
-            </div>
-            <div className="cursor-pointer">
               <IoMdClose
-                className="text-2xl"
-                onClick={() => {
-                  setOpen(!open);
-                }}
+                className="text-2xl cursor-pointer"
+                onClick={() => setOpen(!open)}
               />
             </div>
-          </div>
 
-          {/* Products details */}
-          <div className="md:flex justify-between items-start gap-5 py-5">
-            <div className="bg-white">
-              <img src={productFilter.image} alt="" className="w-20" />
-            </div>
-            <div>
-              <h3 className="text-sm">{productFilter.title}</h3>
-              <p className="text-sm py-1">$ {productFilter.price}</p>
-              {/* Button add for count calculation */}
-              <div className="btn py-1 flex justify-start items-center gap-5">
-                <button
-                  className="bg-red-400 cursor-pointer"
-                  onClick={() => setCount((prev) => (prev <= 0 ? 0 : prev - 1))}
-                >
-                  <FaMinus />
-                </button>
-                <p>{count}</p>
-                <button
-                  className="bg-red-400 cursor-pointer"
-                  onClick={() => setCount(count + 1)}
-                >
-                  <FaPlus />
-                </button>
+            {/* Product details */}
+            {cart.length === 0 ? (
+              <div className="py-5">
+                <p>Product is empty</p>
               </div>
-              <button className="text-sm underline cursor-pointer">Remove Item</button>
+            ) : (
+              cart.map((item) => {
+                const count = counts[item.id] || 1; // default 1 if not yet incremented
+
+                return (
+                  <div
+                    key={item.id}
+                    className="md:flex justify-start items-start gap-5 py-5 border-b border-white/40"
+                  >
+                    <div className="bg-white p-2 rounded">
+                      <img src={item.image} alt={item.title} className="w-24" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-semibold">{item.title}</h3>
+                      <p className="text-sm py-1">$ {item.price}</p>
+
+                      {/* Quantity Controls */}
+                      <div className="flex items-center gap-3 py-2">
+                        <button
+                          className="bg-white text-black px-2 rounded cursor-pointer"
+                          onClick={() => decreaseCount(item.id)}
+                        >
+                          <FaMinus />
+                        </button>
+                        <p>{count}</p>
+                        <button
+                          className="bg-white text-black px-2 rounded cursor-pointer"
+                          onClick={() => increaseCount(item.id)}
+                        >
+                          <FaPlus />
+                        </button>
+                      </div>
+
+                      <button
+                        className="text-sm underline cursor-pointer mt-1"
+                        onClick={() => removeFromCart(item.id)}
+                      >
+                        Remove Item
+                      </button>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+
+            {/* Total Price */}
+            <div className="absolute bottom-5 left-0 w-full px-5">
+              <h1 className="py-3 text-lg font-semibold">
+                Total Price : $ {totalPrice.toFixed(2)}
+              </h1>
+              <button className="bg-white text-black w-full p-2 rounded cursor-pointer hover:bg-gray-200">
+                Quick View
+              </button>
             </div>
           </div>
         </div>

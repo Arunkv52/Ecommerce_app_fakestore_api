@@ -30,7 +30,7 @@ const Navbar = () => {
               setOpen(!open);
             }}
           >
-            <p>Cart <span className="bg-red-500 text-sm px-2">{count}</span></p>
+            <p>Cart </p>
           </div>
         </div>
       </nav>
